@@ -98,6 +98,38 @@ func TestGetProduct(t *testing.T) {
 	checkResponseCode(t, http.StatusOK, response.Code)
 }
 
+func TestUpdateProduct(t *testing.T) {
+	clearTable()
+	addProducts(1)
+
+	req, _ := http.NewRequest("GET", "/products/1", nil)
+	response := executeRequest(req)
+
+	var originalProduct map[string]interface{}
+	json.Unmarshal(response.Body.Bytes(), &originalProduct)
+
+	var jsonStr = []byte(`{"name":"test product - updated", "price":11.22}`)
+	req, _ = http.NewRequest("PUT", "/products/1", bytes.NewBuffer(jsonStr))
+	req.Header.Set("Content-type", "application/json")
+
+	response = executeRequest(req)
+
+	checkResponseCode(t, http.StatusOK, response.Code)
+
+	var m map[string]interface{}
+	json.Unmarshal(response.Body.Bytes(), &m)
+
+	if m["id"] != originalProduct["id"] {
+		t.Errorf("Expected id '%v' to not change. Got '%v'\n", originalProduct["id"], m["id"])
+	}
+	if m["name"] == originalProduct["name"] {
+		t.Errorf("Expected name '%v' -> '%v'. Got '%v'\n", originalProduct["name"], m["name"], m["name"])
+	}
+	if m["price"] == originalProduct["price"] {
+		t.Errorf("Expected price '%v' -> '%v' after update. Got '%v'\n", originalProduct["price"], m["price"], m["price"])
+	}
+}
+
 func addProducts(count int) {
 	if count < 1 {
 		count = 1
