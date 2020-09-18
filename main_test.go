@@ -3,6 +3,7 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -29,6 +30,21 @@ func TestMain(m *testing.M) {
 	code := m.Run()
 	clearTable()
 	os.Exit(code)
+}
+
+func TestGetNonExistentProduct(t *testing.T) {
+	clearTable()
+
+	req, _ := http.NewRequest("GET", "/products/11", nil)
+	response := executeRequest(req)
+
+	checkResponseCode(t, http.StatusNotFound, response.Code)
+
+	var m map[string]string
+	json.Unmarshal(response.Body.Bytes(), &m)
+	if m["error"] != "Product not found" {
+		t.Errorf("Expected the 'error' key of the response = 'Product not found'. Got '%s'", m["error"])
+	}
 }
 
 func TestEmptyTable(t *testing.T) {
