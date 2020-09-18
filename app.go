@@ -13,11 +13,17 @@ import (
 	_ "github.com/lib/pq"
 )
 
+/*
+App struct
+*/
 type App struct {
 	Router *mux.Router
 	DB     *sql.DB
 }
 
+/*
+Initialize database
+*/
 func (a *App) Initialize(user, password, dbname string) {
 	connectionString :=
 		fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", user, password, dbname)
@@ -29,6 +35,9 @@ func (a *App) Initialize(user, password, dbname string) {
 	a.Router = mux.NewRouter()
 }
 
+/*
+Run Application
+*/
 func (a *App) Run(add string) {}
 
 func (a *App) getProduct(w http.ResponseWriter, r *http.Request) {
@@ -51,6 +60,26 @@ func (a *App) getProduct(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondWithJSON(w, http.StatusOK, p)
+}
+
+func (a *App) getProducts(w http.ResponseWriter, r *http.Request) {
+	count, _ := strconv.Atoi(r.FormValue("count"))
+	start, _ := strconv.Atoi(r.FormValue("start"))
+
+	if count > 10 || count < 1 {
+		count = 10
+	}
+	if start < 0 {
+		start = 0
+	}
+
+	products, err := getProducts(a.DB, start, count)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, products)
 }
 
 func respondWithError(w http.ResponseWriter, code int, message string) {
