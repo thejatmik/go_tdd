@@ -98,6 +98,30 @@ func (a *App) createProduct(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusCreated, p)
 }
 
+func (a *App) updateProduct(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid product id")
+		return
+	}
+
+	var p product
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&p); err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
+	defer r.Body.Close()
+	p.ID = id
+
+	if err := p.updateProduct(a.DB); err != nil {
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+	}
+
+	respondWithJSON(w, http.StatusOK, p)
+}
+
 func respondWithError(w http.ResponseWriter, code int, message string) {
 	respondWithJSON(w, code, map[string]string{"error": message})
 }
