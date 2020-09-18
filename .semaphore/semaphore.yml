@@ -19,3 +19,10 @@ blocks:
             - go get ./...
             - go test ./...
             - go build -v .
+      env_vars:
+        - name: APP_DB_USERNAME
+          value: postgres
+        - name: APP_DB_PASSWORD
+          value: postgres
+        - name: APP_DB_NAME
+          value: postgres
