@@ -130,6 +130,25 @@ func TestUpdateProduct(t *testing.T) {
 	}
 }
 
+func TestDeleteProduct(t *testing.T) {
+	clearTable()
+	addProducts(1)
+
+	req, _ := http.NewRequest("GET", "/products/1", nil)
+	response := executeRequest(req)
+	checkResponseCode(t, http.StatusOK, response.Code)
+
+	req, _ = http.NewRequest("DELETE", "/products/1", nil)
+	response = executeRequest(req)
+
+	checkResponseCode(t, http.StatusOK, response.Code)
+
+	req, _ = http.NewRequest("GET", "/produts/1", nil)
+	response = executeRequest(req)
+
+	checkResponseCode(t, http.StatusNotFound, response.Code)
+}
+
 func addProducts(count int) {
 	if count < 1 {
 		count = 1
