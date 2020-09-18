@@ -3,6 +3,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -32,6 +33,45 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
+func TestEmptyTable(t *testing.T) {
+	clearTable()
+
+	req, _ := http.NewRequest("GET", "/products", nil)
+	response := executeRequest(req)
+
+	checkResponseCode(t, http.StatusOK, response.Code)
+
+	if body := response.Body.String(); body != "[]" {
+		t.Errorf("Expected an empty array. Got %s", body)
+	}
+}
+
+func TestCreateProduct(t *testing.T) {
+	clearTable()
+
+	var jsonStr = []byte(`{"name":"test product", "price": 11.22}`)
+	req, _ := http.NewRequest("POST", "/products", bytes.NewBuffer(jsonStr))
+	req.Header.Set("Content-type", "application/json")
+
+	response := executeRequest(req)
+	checkResponseCode(t, http.StatusCreated, response.Code)
+
+	var m map[string]interface{}
+	json.Unmarshal(response.Body.Bytes(), &m)
+
+	if m["name"] != "test product" {
+		t.Errorf("Expected 'test product'. Got '%v'\n", m["name"])
+	}
+	if m["price"] != 11.22 {
+		t.Errorf("Expected price '11.22'. Got '%v'\n", m["price"])
+	}
+
+	// unmarshal converts number to floats when target is map[string]interfaces{}
+	if m["id"] != 1.0 {
+		t.Errorf("Expected product ID = '1'. Got '%v'\n", m["id"])
+	}
+}
+
 func TestGetNonExistentProduct(t *testing.T) {
 	clearTable()
 
@@ -44,19 +84,6 @@ func TestGetNonExistentProduct(t *testing.T) {
 	json.Unmarshal(response.Body.Bytes(), &m)
 	if m["error"] != "Product not found" {
 		t.Errorf("Expected the 'error' key of the response = 'Product not found'. Got '%s'", m["error"])
-	}
-}
-
-func TestEmptyTable(t *testing.T) {
-	clearTable()
-
-	req, _ := http.NewRequest("GET", "/products", nil)
-	response := executeRequest(req)
-
-	checkResponseCode(t, http.StatusOK, response.Code)
-
-	if body := response.Body.String(); body != "[]" {
-		t.Errorf("Expected an empty array. Got %s", body)
 	}
 }
 
