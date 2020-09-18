@@ -33,12 +33,15 @@ func (a *App) Initialize(user, password, dbname string) {
 		log.Fatal(err)
 	}
 	a.Router = mux.NewRouter()
+	a.initializeRoutes()
 }
 
 /*
 Run Application
 */
-func (a *App) Run(add string) {}
+func (a *App) Run(addr string) {
+	log.Fatal(http.ListenAndServe(":8010", a.Router))
+}
 
 func (a *App) getProduct(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
@@ -137,6 +140,14 @@ func (a *App) deleteProduct(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondWithJSON(w, http.StatusOK, map[string]string{"result": "success"})
+}
+
+func (a *App) initializeRoutes() {
+	a.Router.HandleFunc("/products", a.getProducts).Methods("GET")
+	a.Router.HandleFunc("/products", a.createProduct).Methods("POST")
+	a.Router.HandleFunc("/products/{id:[0-9]+}", a.getProduct).Methods("GET")
+	a.Router.HandleFunc("/products/{id:[0-9]+}", a.updateProduct).Methods("PUT")
+	a.Router.HandleFunc("/products/{id:[0-9]+}", a.deleteProduct).Methods("DELETE")
 }
 
 func respondWithError(w http.ResponseWriter, code int, message string) {

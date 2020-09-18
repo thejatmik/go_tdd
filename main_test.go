@@ -180,7 +180,7 @@ func ensureTableExists() {
 
 func clearTable() {
 	a.DB.Exec("DELETE FROM products")
-	a.DB.Exec("ALTER SEQUENCE product_id_seq RESTART WITH 1")
+	a.DB.Exec("ALTER SEQUENCE products_id_seq RESTART WITH 1")
 }
 
 const tableCreationQuery = `CREATE TABLE IF NOT EXISTS products
