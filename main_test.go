@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strconv"
 	"testing"
 
 	"github.com/joho/godotenv"
@@ -46,6 +47,21 @@ func TestEmptyTable(t *testing.T) {
 	}
 }
 
+func TestGetNonExistentProduct(t *testing.T) {
+	clearTable()
+
+	req, _ := http.NewRequest("GET", "/products/11", nil)
+	response := executeRequest(req)
+
+	checkResponseCode(t, http.StatusNotFound, response.Code)
+
+	var m map[string]string
+	json.Unmarshal(response.Body.Bytes(), &m)
+	if m["error"] != "Product not found" {
+		t.Errorf("Expected the 'error' key of the response = 'Product not found'. Got '%s'", m["error"])
+	}
+}
+
 func TestCreateProduct(t *testing.T) {
 	clearTable()
 
@@ -72,18 +88,23 @@ func TestCreateProduct(t *testing.T) {
 	}
 }
 
-func TestGetNonExistentProduct(t *testing.T) {
+func TestGetProduct(t *testing.T) {
 	clearTable()
+	addProducts(1)
 
-	req, _ := http.NewRequest("GET", "/products/11", nil)
+	req, _ := http.NewRequest("GET", "/products/1", nil)
 	response := executeRequest(req)
 
-	checkResponseCode(t, http.StatusNotFound, response.Code)
+	checkResponseCode(t, http.StatusOK, response.Code)
+}
 
-	var m map[string]string
-	json.Unmarshal(response.Body.Bytes(), &m)
-	if m["error"] != "Product not found" {
-		t.Errorf("Expected the 'error' key of the response = 'Product not found'. Got '%s'", m["error"])
+func addProducts(count int) {
+	if count < 1 {
+		count = 1
+	}
+
+	for i := 0; i < count; i++ {
+		a.DB.Exec("INSERT INTO products(name, price) VALUES($1, $2)", "Product "+strconv.Itoa(i), (i+1.0)*10)
 	}
 }
 
